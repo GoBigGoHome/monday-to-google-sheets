@@ -1,5 +1,6 @@
 # monday-to-google-sheets
-Pulling Monday.com data into a Google Sheet
+Pulling Monday.com data into a Google Sheet.
+
 I am not an expert but I finally found a way that sort of works for us. I was equally getting frustrated that Zapier's ability to push Monday data efficiently to Sheets was not there. More so the other way around but there was another post here about that and I was able to get Sheets to speak to Monday in a blast vs one column change at a time through Zapier. 
 
 The challenge with my solution is that it does not trigger from Monday. I have mine triggering once a day over night. What I have attached is a sample of my code that I have in my script editor in my Google sheets set on a time based trigger. I have three functions. 
