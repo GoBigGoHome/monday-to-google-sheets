@@ -1,0 +1,69 @@
+// API key (for illustration only, you should store production key in an environment variable)
+  var mondayAPIkey = "INSERT_YOUR_API_KEY_HERE";
+  var url = "https://api.monday.com/v2";
+
+function makeAPICall(key, query, variables) {
+  var url = "https://api.monday.com/v2";
+  var options = {
+    "method" : "post",
+    "headers" : {
+      "Authorization" : key,
+    },
+    "payload" : JSON.stringify({
+      "query" : query,
+      "variables" : variables
+    }),
+    "contentType" : "application/json"
+  };
+  var response = UrlFetchApp.fetch(url, options);
+  Logger.log(response);
+  var respsone = JSON.parse(response);
+  return response;
+}
+
+function getboards() {
+  // API key (for illustration only, you should store production key in an environment variable)
+  //var mondayAPIkey = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjI0NzkzMTI1LCJ1aWQiOjEwMTg2ODMxLCJpYWQiOiIyMDE5LTEwLTE4IDEwOjE3OjIyIFVUQyIsInBlciI6Im1lOndyaXRlIn0.Ph3vdQec5aL_bxzU8IOfPLpJJqvaBJmqNQNzszCgrkU";
+  //var url = "https://api.monday.com/v2";
+  var query = "query{boards(limit:1000,state:active){id,name}}";
+  var variables = {
+      "limit" : 1000,
+      "state" : "active",
+    };
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet(); //I put my code in the Google Scripts editor on the Spreadsheet I wanted to use. 
+  var sheet = ss.getSheetByName("Boards"); //The sheet I am putting my Boards on. 
+  
+  var data = JSON.parse(makeAPICall(mondayAPIkey,query,variables));
+  var boards = data.data.boards;
+  var x = 2; //The row I want to start with (I have a header in row 1).
+  boards.forEach(function(elem){
+    sheet.getRange(x, 1).setValue(elem['name']);
+    sheet.getRange(x, 2).setValue(elem['id']);
+    x++; //this allows it to go to the next line before starting the loop over for the next item.
+  });
+ 
+} 
+function getitems() {
+  var query = "query{items(limit:30000){id,name,board{id,name}}}"; //Always a good idea to test and play with the query in Monday's API first to make sure you know what your result is and what the data looks like. 
+  var variables = {
+      "limit" : 30000,
+      };
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet(); //I put my code in the Google Scripts editor on the Spreadsheet I wanted to use. 
+  var sheet = ss.getSheetByName("Pulses"); //The sheet I am putting my Boards on.
+  
+  var data = JSON.parse(makeAPICall(mondayAPIkey,query,variables)); //the results from the Query gives you nested objects so it's a little more complicated than the boards function.
+  Logger.log(data) //this is optional, but it could help you if you are getting errors to see what the data looks like after the API call. 
+  var items = data.data.items;
+  var x = 2;
+  items.forEach(function(elem){
+    sheet.getRange(x, 3).setValue(elem['name']);
+    sheet.getRange(x, 4).setValue(elem['id']);
+    var board = elem['board'] //since the board object has it's own elements (name and id) this is how to extract those. 
+    sheet.getRange(x, 1).setValue(board['name'])
+    sheet.getRange(x, 2).setValue(board['id']);
+    x++; //this allows it to go to the next line before starting the loop over for the next item.
+  });
+ 
+}
