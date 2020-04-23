@@ -23,7 +23,7 @@ function makeAPICall(key, query, variables) {
 
 function getboards() {
   // API key (for illustration only, you should store production key in an environment variable)
-  //var mondayAPIkey = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjI0NzkzMTI1LCJ1aWQiOjEwMTg2ODMxLCJpYWQiOiIyMDE5LTEwLTE4IDEwOjE3OjIyIFVUQyIsInBlciI6Im1lOndyaXRlIn0.Ph3vdQec5aL_bxzU8IOfPLpJJqvaBJmqNQNzszCgrkU";
+  //var mondayAPIkey = "insert your Monday API Key here";
   //var url = "https://api.monday.com/v2";
   var query = "query{boards(limit:1000,state:active){id,name}}";
   var variables = {
@@ -67,3 +67,44 @@ function getitems() {
   });
  
 }
+
+function ItemsOnABoardWithColumnValues(){
+  //A few notes about this particular function. 
+  //1. When pulling column values they don't break up very nicely. I have examples below and how I worked around them.
+  //2. the i+3 in the first loop is showing my first row to collect data is row 3 as i starts at 0.
+  //3. the j+15 in the second loop is showing my first column to collect column values is O (15) as j starts at 0.
+  
+  // API key (for illustration only, you should store production key in an environment variable)
+var mondayAPIkey = "INSERT_YOUR_API_KEY_HERE";
+
+// ID of destination board
+var boardID = "Insert your Board's ID here";  
+  var query = "query($board:[Int]){boards(ids:$board){items{id,name,column_values{id,value}}}}";
+  var variables = {
+    "board": boardID
+  };
+    var data = JSON.parse(makeAPICall(mondayAPIkey,query,variables));
+   
+    
+    var ss = SpreadsheetApp.getActive();
+  var sh = ss.getSheetByName("Insert your sheets name here");
+  
+  var boards = data.data.boards;
+  boards.forEach(function(elem){
+    var items = elem['items'];
+    for(i=0;i<items.length;i++){
+    sh.getRange(i+3, 1).setValue(items[i]["id"]);
+    sh.getRange(i+3, 2).setValue(items[i]["name"]);
+      for (j=0;j<11;j++){
+        sh.getRange(i+3, j+15).setValue(items[i]["column_values"][j]["value"]);                               
+      }
+    }
+    })    
+    //the column values that will end up in your sheet will likely look like this:
+    //Example for a status column: {"index":0,"post_id":null,"changed_at":"2020-04-20T19:24:01.777Z"}
+    //this is not necessarily what you want. Chance are you only need a piece of this data, like the index. 
+    //To work around it I used formulas directly on my sheet vs scripting out the mutations.
+    //This values was in Q3, I put this formula in E3 to get the index value:
+    //=iferror(replace(replace(Q3,1,find(":",Q3),""),find(",",replace(Q3,1,find(":",Q3),"")),len(replace(Q3,1,find(":",Q3),""))-find(",",replace(Q3,1,find(":",Q3),""))+1,""))
+    
+  }
